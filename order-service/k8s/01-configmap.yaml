@@ -1,0 +1,26 @@
+# ============================================
+# CONFIGMAP - Configuración NO sensible
+# ============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-service-config
+  namespace: order-service
+  labels:
+    app: order-service
+
+data:
+  # URL de base de datos
+  DB_URL: "jdbc:postgresql://host.docker.internal:5435/orderdb"
+
+  # Kafka y Dependencias
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "host.docker.internal:9092"
+  PRODUCT_SERVICE_URL: "http://product-service.product-service.svc.cluster.local/api/products/"
+
+  # Configuración JPA/Logging
+  DDL_AUTO: "update"
+  SHOW_SQL: "false"
+  POOL_SIZE: "10"
+  LOG_LEVEL: "INFO"
+  SQL_LOG_LEVEL: "WARN"
+  JAVA_OPTS: "-Xmx512m -Xms256m"

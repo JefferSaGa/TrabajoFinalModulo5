@@ -1,0 +1,26 @@
+# ============================================
+# CONFIGMAP - Configuración NO sensible
+# ============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  namespace: payment-service
+  labels:
+    app: payment-service
+
+data:
+  # URL de base de datos
+  DB_URL: "jdbc:postgresql://host.docker.internal:5436/paymentdb"
+
+  # Kafka
+  #KAFKA_URL: "host.docker.internal:9092"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "host.docker.internal:9092"
+
+  # Configuración JPA/Logging
+  DDL_AUTO: "validate"
+  SHOW_SQL: "false"
+  POOL_SIZE: "10"
+  LOG_LEVEL: "INFO"
+  SQL_LOG_LEVEL: "WARN"
+  JAVA_OPTS: "-Xmx512m -Xms256m"

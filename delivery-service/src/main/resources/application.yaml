@@ -1,0 +1,101 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: delivery-service
+
+  # ============================================
+  # DATASOURCE - DeliveryDB (Puerto 5438)
+  # ============================================
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5438/deliverydb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${POOL_SIZE:10}
+      minimum-idle: 5
+      connection-timeout: 20000
+
+  # ============================================
+  # JPA CONFIGURATION
+  # ============================================
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+
+  # ============================================
+  # KAFKA CONFIGURATION (Consumidor y Productor)
+  # ============================================
+kafka:
+  bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:host.docker.internal:9092}
+  consumer:
+    group-id: delivery-service-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# ============================================
+# JWT CONFIGURATION
+# ============================================
+jwt:
+  secret: ${JWT_SECRET:m1S3cr3tK3yJWT_T3csup2025!@#SecureToken}
+  expiration: 3600000
+
+# ============================================
+# ACTUATOR & OBSERVABILITY
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 0.0 # Desactivado en local para no saturar la consola si Zipkin no está arriba
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Descomentar solo si tienes Zipkin corriendo en el puerto 9411
+# management.zipkin.tracing:
+#   endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+
+# ============================================
+# LOGGING
+# ============================================
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  level:
+    com.tecsup.app.micro.delivery: ${LOG_LEVEL:DEBUG}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}

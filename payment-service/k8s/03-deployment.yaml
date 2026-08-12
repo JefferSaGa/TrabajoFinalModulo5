@@ -1,0 +1,58 @@
+# ============================================
+# DEPLOYMENT - Gestión de Pods
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: payment-service
+  labels:
+    app: payment-service
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: payment-service:1.0.6
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+
+            # Referencias a ConfigMap
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef: {name: payment-service-config, key: DB_URL}
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef: {name: payment-service-config, key: SPRING_KAFKA_BOOTSTRAP_SERVERS}
+            - name: DDL_AUTO
+              valueFrom:
+                configMapKeyRef: {name: payment-service-config, key: DDL_AUTO}
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef: {name: payment-service-config, key: LOG_LEVEL}
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef: {name: payment-service-config, key: JAVA_OPTS}
+
+            # Referencias a Secret
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef: {name: payment-service-secret, key: DB_USERNAME}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: payment-service-secret, key: DB_PASSWORD}

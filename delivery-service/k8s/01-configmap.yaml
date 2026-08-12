@@ -1,0 +1,31 @@
+# ============================================
+# CONFIGMAP - Configuración NO sensible
+# ============================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: delivery-service-config
+  namespace: delivery-service
+  labels:
+    app: delivery-service
+
+data:
+  # URL de la base de datos
+  DB_URL: "jdbc:postgresql://host.docker.internal:5438/deliverydb"
+
+  # Conexión a Kafka
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "host.docker.internal:9092"
+
+  # Configuración de JPA
+  DDL_AUTO: "validate"
+  SHOW_SQL: "false"
+
+  # Pool de conexiones
+  POOL_SIZE: "10"
+
+  # Logging
+  LOG_LEVEL: "INFO"
+  SQL_LOG_LEVEL: "WARN"
+
+  # JVM
+  JAVA_OPTS: "-Xmx512m -Xms256m"

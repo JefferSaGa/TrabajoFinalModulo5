@@ -1,0 +1,133 @@
+# ============================================
+# APPLICATION CONFIGURATION FOR KUBERNETES
+# ============================================
+# Order Service - Configuración para Kubernetes y Local
+
+server:
+  port: 8083 # Cambiado a 8083 para que no choque con product-service
+
+spring:
+  application:
+    name: order-service
+
+  # ============================================
+  # DATASOURCE - OrderDB
+  # ============================================
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5435/orderdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${POOL_SIZE:10}
+      minimum-idle: 5
+      connection-timeout: 20000
+
+  # ============================================
+  # JPA CONFIGURATION
+  # ============================================
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+
+  # ============================================
+  # KAFKA CONFIGURATION (Mensajería asíncrona)
+  # ============================================
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:host.docker.internal:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# ============================================
+# PRODUCT SERVICE URL - Comunicación entre servicios
+# ============================================
+# En Kubernetes, usar DNS interno
+# Formato: http://<service-name>.<namespace>.svc.cluster.local/api/products/
+application:
+  client:
+    product-service:
+      url: ${PRODUCT_SERVICE_URL:http://localhost:8082/api/products/}
+
+# ============================================
+# JWT CONFIGURATION (Sesión 2)
+# ============================================
+jwt:
+  secret: ${JWT_SECRET:m1S3cr3tK3yJWT_T3csup2025!@#SecureToken}
+  expiration: 3600000  # 1 hora en milisegundos
+
+# ============================================
+# RESILIENCE4J (Sesión 3)
+# ============================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      productService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000    # 10 segundos en OPEN
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      productService:
+        maxAttempts: 3
+        waitDuration: 1000                # 1 segundo entre reintentos
+
+# ============================================
+# ACTUATOR (Para health checks de Kubernetes)
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  # Métricas Prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  # Trazas distribuidas
+  tracing:
+    sampling:
+      probability: 1.0        # 1.0 = 100% de trazas (solo para desarrollo)
+  # Tags comunes en todas las métricas
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true    # Habilitar histograma de latencia
+
+# Zipkin endpoint para rastrear peticiones HTTP y Kafka
+management.zipkin.tracing:
+  endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+
+# ============================================
+# LOGGING
+# ============================================
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  level:
+    com.tecsup.app.micro.order: ${LOG_LEVEL:DEBUG} # En DEBUG para ver paso a paso la creación de la orden
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}

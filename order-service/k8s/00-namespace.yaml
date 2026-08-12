@@ -1,0 +1,10 @@
+# ============================================
+# NAMESPACE
+# ============================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: order-service
+  labels:
+    name: order-service
+    environment: local
