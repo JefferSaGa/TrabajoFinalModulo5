@@ -3,8 +3,8 @@
 # ============================================
 
 global:
-  scrape_interval: 15s          # Cada 15 segundos consulta las métricas
-  evaluation_interval: 15s      # Cada 15 segundos evalúa reglas
+  scrape_interval: 30s
+  evaluation_interval: 30s
 
 scrape_configs:
 
@@ -14,27 +14,27 @@ scrape_configs:
       - targets: ['localhost:9090']
 
   # order-service (Alcanzado mediante port-forward local)
-  - job_name: 'order-service'
+  - job_name: 'ordernes-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 10s
     static_configs:
       - targets: ['host.docker.internal:8083']
         labels:
-          application: 'order-service'
+          application: 'ordernes-service'
 
   # payment-service (Alcanzado mediante port-forward local)
-  - job_name: 'payment-service'
+  - job_name: 'pagos-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 10s
     static_configs:
       - targets: ['host.docker.internal:8084']
         labels:
-          application: 'payment-service'
+          application: 'pagos-service'
 
-  - job_name: 'delivery-service'
+  - job_name: 'pedidos-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 10s
     static_configs:
         - targets: ['host.docker.internal:8085'] #
           labels:
-            application: 'delivery-service'
+            application: 'pedidos-service'

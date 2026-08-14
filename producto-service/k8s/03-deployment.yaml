@@ -1,0 +1,88 @@
+# ============================================
+# DEPLOYMENT - Gestión de Pods
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: product-service
+  labels:
+    app: product-service
+
+spec:
+
+  replicas: 1  # Empezamos con 1 pod
+
+
+  selector:
+    matchLabels:
+      app: product-service
+
+
+  template:
+    metadata:
+      labels:
+        app: product-service
+
+    spec:
+      containers:
+        - name: product-service
+
+
+          image: product-service:1.0.1
+          imagePullPolicy: IfNotPresent
+
+
+          ports:
+            - containerPort: 8082
+              name: http
+
+          env:
+            # Spring profile
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+
+            # Desde ConfigMap
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: product-service-config
+                  key: USER_SERVICE_URL
+
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: product-service-config
+                  key: DB_URL
+
+            - name: DDL_AUTO
+              valueFrom:
+                configMapKeyRef:
+                  name: product-service-config
+                  key: DDL_AUTO
+
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: product-service-config
+                  key: LOG_LEVEL
+
+            - name: JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: product-service-config
+                  key: JAVA_OPTS
+
+
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: product-service-secret
+                  key: DB_USERNAME
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: product-service-secret
+                  key: DB_PASSWORD
